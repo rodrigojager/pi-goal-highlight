@@ -15,11 +15,16 @@ const context = { messageType: "user", availableWidth: 80, isStreaming: false };
 const prompt = body => `Goal mode is active. Complete this goal fully:\n\n<goal_objective>\n${body}\n</goal_objective>\n\n<goal_id>\nunchanged-id\n</goal_id>\nRules and continuation markers stay intact.`;
 const stripAnsi = value => value.replace(/\x1b\[[0-9;]*m/g, "");
 
-test("presentation preserves prompt boundaries, goal IDs and rules", () => {
+test("presentation replaces the generated introduction and XML wrapper with GOAL", () => {
   const original = prompt("Execute integralmente o plano.");
   const output = highlightGoal(original, context, plainUtils);
   assert.ok(output.includes("\x1b[48;2;32;48;59m"));
   assert.ok(output.includes("\x1b[38;2;110;231;220m"));
+  assert.ok(stripAnsi(output).startsWith("[GOAL]"));
+  assert.ok(!output.includes("<goal_objective>"));
+  assert.ok(!output.includes("</goal_objective>"));
+  assert.ok(!output.includes("```"));
+  assert.ok(!output.includes("Goal mode is active."));
   assert.ok(output.endsWith("<goal_id>\nunchanged-id\n</goal_id>\nRules and continuation markers stay intact."));
   assert.equal(original, prompt("Execute integralmente o plano."));
   assert.equal(highlightGoal(output, context, plainUtils), output);
@@ -40,10 +45,10 @@ test("all upstream visible goal prompt variants are recognized", () => {
   }
 });
 
-test("objective code fences and Markdown remain literal data", () => {
+test("user-authored Markdown is retained without adding an extension code fence", () => {
   const output = highlightGoal(prompt("**Literal** &lt;xml&gt;\n````typescript\nconst x = 1;\n````"), context, plainUtils);
-  assert.match(output, /\n`````goal\n/);
-  assert.ok(stripAnsi(output).includes("**Literal** &lt;xml&gt;"));
+  assert.ok(!output.includes("`````goal"));
+  assert.ok(stripAnsi(output).includes("**Literal** <xml>"));
   assert.ok(stripAnsi(output).includes("const x = 1;"));
 });
 
@@ -67,7 +72,10 @@ test("actual Pi renderer keeps colors, wraps Unicode and respects terminal resiz
     assert.ok(lines.every(line => tui.visibleWidth(line) <= width), `render exceeded ${width} columns`);
     assert.ok(lines.some(line => line.includes("\x1b[48;2;32;48;59m")));
     const visible = lines.map(stripAnsi).join("\n");
-    if (width >= 80) assert.ok(visible.includes("**literal** `code` &lt;task&gt;"));
+    assert.ok(!visible.includes("goal_objective"));
+    assert.ok(!visible.includes("```goal"));
+    assert.ok(visible.includes("[GOAL]"));
+    if (width >= 80) assert.ok(visible.includes("literal") && visible.includes("code") && visible.includes("<task>"));
   }
   assert.equal(component.text, original, "stored user message must remain unchanged");
 });
@@ -91,7 +99,12 @@ test("actual Pi extension loader registers only presentation and a preview comma
   await command.handler("", { hasUI: true, ui: {
     custom: async factory => {
       const preview = factory({}, {}, {}, () => { closed = true; });
-      assert.ok(preview.render(80).some(line => line.includes("\x1b[48;2;32;48;59m")));
+      const lines = preview.render(80);
+      assert.ok(lines.some(line => line.includes("\x1b[48;2;32;48;59m")));
+      const visible = lines.map(stripAnsi).join("\n");
+      assert.ok(visible.includes("[GOAL]"));
+      assert.ok(!visible.includes("goal_objective"));
+      assert.ok(!visible.includes("```"));
       preview.invalidate();
       preview.handleInput("\r");
     },

@@ -1,6 +1,6 @@
 {
   "name": "pi-goal-highlight",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Highlight pi-goal objectives in the Pi transcript without changing prompts or goal state.",
   "type": "module",
   "license": "MIT",
