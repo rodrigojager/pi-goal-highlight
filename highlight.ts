@@ -3,6 +3,7 @@ const OBJECTIVE = /(?:^|\n)<goal_objective>\r?\n([\s\S]*?)\r?\n<\/goal_objective
 const COLOR = "\x1b[48;2;32;48;59m\x1b[38;2;110;231;220m";
 const RESET = "\x1b[39m\x1b[49m";
 
+// Keep this module as .ts: Pi's jiti loader reloads it; native .mjs imports stay cached.
 /** Presentation only: Pi calls this on a copy, immediately before Markdown rendering. */
 export function highlightGoal(markdown, context, { wrapTextWithAnsi, visibleWidth }) {
   if (context.messageType !== "user" || !GOAL_PROMPT.test(markdown)) return markdown;

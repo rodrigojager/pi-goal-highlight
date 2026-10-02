@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getMarkdownTheme, UserMessageComponent } from "@earendil-works/pi-coding-agent";
 import { Key, matchesKey, visibleWidth, wrapTextWithAnsi } from "@earendil-works/pi-tui";
-import { highlightGoal } from "./highlight.mjs";
+import { highlightGoal } from "./highlight.ts";
 
 export default function goalHighlight(pi: ExtensionAPI) {
   if (typeof pi.registerMarkdownTransformer !== "function") {

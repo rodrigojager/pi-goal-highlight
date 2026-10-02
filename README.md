@@ -12,6 +12,8 @@ pi install https://github.com/rodrigojager/pi-goal-highlight
 
 Keep the original `pi-goal` installed. When an existing Pi session is idle, use `/reload`, then `/goal-highlight-preview` to inspect the colors without a goal or model request.
 
+Version 1.0.2 fixes updates in an already running session: the presentation helper uses `.ts` so Pi's extension loader reloads it. A native `.mjs` dependency could retain the previous appearance after `/reload`. Reload once after updating to this version; no Pi restart is needed.
+
 For a local checkout, use `pi -e ./index.ts`. Alternatively, load a wrapper from `~/.pi/agent/extensions` that imports this extension. Do not install both the package and the wrapper: choose one loading method.
 
 ## Behavior

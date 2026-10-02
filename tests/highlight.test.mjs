@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { pathToFileURL } from "node:url";
-import { highlightGoal } from "../highlight.mjs";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// The helper is plain JavaScript in a .ts file so Pi reloads it through jiti.
+// Import its source for dependency-free checks on Node versions without TS support.
+const helperSource = await readFile(new URL("../highlight.ts", import.meta.url), "utf8");
+const { highlightGoal } = await import(`data:text/javascript;base64,${Buffer.from(helperSource).toString("base64")}`);
 
 // Core contract checks need no dependencies. Host integration uses the actual installed Pi.
 const plainUtils = {
@@ -110,4 +117,31 @@ test("actual Pi extension loader registers only presentation and a preview comma
     },
   } });
   assert.ok(closed, "the actual preview closes on Enter without sending a prompt");
+});
+
+test("Pi reload refreshes the helper and preview through the installed wrapper layout", { skip: !process.env.PI_TEST_PACKAGE }, async () => {
+  const root = process.env.PI_TEST_PACKAGE.replace(/\\/g, "/");
+  const loader = await import(pathToFileURL(`${root}/dist/core/extensions/loader.js`).href);
+  const fixture = await mkdtemp(join(tmpdir(), "pi-goal-highlight-reload-"));
+  const entry = await readFile(new URL("../index.ts", import.meta.url), "utf8");
+  await writeFile(join(fixture, "index.ts"), entry);
+  await writeFile(join(fixture, "wrapper.ts"), 'export { default } from "./index.ts";\n');
+  await writeFile(join(fixture, "highlight.ts"), helperSource.replace('"[GOAL]"', '"[OLD]"'));
+  const preview = async () => {
+    const result = await loader.loadExtensions([join(fixture, "wrapper.ts")], fixture);
+    assert.deepEqual(result.errors, []);
+    let visible;
+    await result.extensions[0].commands.get("goal-highlight-preview").handler("", { hasUI: true, ui: {
+      custom: async factory => { visible = factory({}, {}, {}, () => {}).render(80).map(stripAnsi).join("\n"); },
+    } });
+    return visible;
+  };
+  assert.ok((await preview()).includes("[OLD]"));
+  await writeFile(join(fixture, "highlight.ts"), helperSource);
+  loader.clearExtensionCache();
+  const visible = await preview();
+  assert.ok(visible.includes("[GOAL]"));
+  assert.ok(!visible.includes("[OLD]"));
+  assert.ok(!visible.includes("goal_objective"));
+  assert.ok(!visible.includes("```"));
 });

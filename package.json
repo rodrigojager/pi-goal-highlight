@@ -1,12 +1,12 @@
 {
   "name": "pi-goal-highlight",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Highlight pi-goal objectives in the Pi transcript without changing prompts or goal state.",
   "type": "module",
   "license": "MIT",
   "keywords": ["pi-package", "pi-extension", "goal", "tui"],
   "pi": { "extensions": ["./index.ts"] },
-  "files": ["index.ts", "highlight.mjs", "README.md", "LICENSE"],
+  "files": ["index.ts", "highlight.ts", "README.md", "LICENSE"],
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": ">=1.0.0",
     "@earendil-works/pi-tui": ">=1.0.0"
