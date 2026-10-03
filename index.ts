@@ -14,7 +14,7 @@ export default function goalHighlight(pi: ExtensionAPI) {
     description: "Preview goal highlighting without starting a goal or a model request",
     handler: async (_args, ctx) => {
       if (!ctx.hasUI) return;
-      const sample = "Goal mode is active. Complete this goal fully:\n\n<goal_objective>\nExemplo de objetivo: implementar, compilar e verificar o software.\nO bloco usa fundo azul e texto turquesa, com quebra de linha.\n</goal_objective>\n\nPressione Enter ou Esc para fechar.";
+      const sample = "Goal mode is active. Complete this goal fully:\n\n<goal_objective>\nExemplo de objetivo: implementar, compilar e verificar o software.\nO bloco usa fundo roxo uniforme e texto turquesa, com quebra de linha.\n</goal_objective>\n\n<goal_id>\npreview-only\n</goal_id>\n\nPressione Enter ou Esc para fechar.";
       await ctx.ui.custom((_tui, _theme, _keys, done) => {
         const component = new UserMessageComponent(sample, getMarkdownTheme(), 1, [transform]);
         return {
